@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fetch API</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+  <style>
+    /* Custom styles for gradient background and other effects */
+    body {
+      background-color: #032141;
+      min-height: 100vh;
+    }
+    .btn {
+      background-color: #032141; /* Bootstrap primary color */
+      color: white;
+      font-weight: bold;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      
+    }
+    .btn:hover {
+      background-color: #0056b3; /* Darker shade for hover effect */
+      transform: translateY(-0.25rem);
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body class="font-sans antialiased text-gray-900">
+  <div class="w-full max-w-[1000px] mx-auto bg-white rounded-lg shadow-lg p-4 my-8">
+    <div id="myTable"></div>
+    <div class="flex justify-between mt-4">
+      <button id="prev" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:-translate-y-1 shadow">Previous</button>
+      <span id="pageNumber" class="self-center text-lg font-semibold">Page 1</span>
+      <button id="next" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:-translate-y-1 shadow">Next</button>
+    </div>
+  </div>
+  <script>
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let products = [];
+
+    function cell(value, isHead, isImage = false) {
+      return isImage ?
+        $('<td/>').addClass("border border-gray-300 p-2").html(`<img src="${value}" alt="Product Image" class="w-20 h-20 object-cover">`) :
+        $(isHead ? '<th/>' : '<td/>').addClass("border border-gray-300 p-2 text-gray-700").text(value);
+    }
+
+    function row(values, isHead) {
+      const tr = $('<tr/>').addClass(isHead ? "" : "hover:bg-white hover:shadow-lg transition duration-300");
+      values.forEach(value => tr.append(cell(value.src || value, isHead, value.isImage)));
+      return tr;
+    }
+
+    function createTable(data) {
+      const table = $('<table/>').addClass("table-auto w-full shadow-md rounded-lg overflow-hidden").append(row(["Title", "Description", "Price", "Image"], true));
+      data.forEach(asset => table.append(row([asset.title, asset.description, asset.price, { isImage: true, src: asset.thumbnail }])));
+      $('#myTable').empty().append(table);
+    }
+
+    function paginate(page) {
+      const start = (page - 1) * itemsPerPage;
+      createTable(products.slice(start, start + itemsPerPage));
+      $('#pageNumber').text(`Page ${currentPage} of ${Math.ceil(products.length / itemsPerPage)}`);
+    }
+
+    function fetchProducts() {
+      fetch("https://dummyjson.com/products?limit=100")
+        .then(response => response.json())
+        .then(data => {
+          products = data.products;
+          paginate(currentPage);
+        });
+    }
+
+    $(document).ready(() => {
+      fetchProducts();
+      $('#prev').click(() => currentPage > 1 && paginate(--currentPage));
+      $('#next').click(() => currentPage * itemsPerPage < products.length && paginate(++currentPage));
+    });
+  </script>
+</body>
+</html>
